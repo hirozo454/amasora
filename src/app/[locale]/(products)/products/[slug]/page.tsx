@@ -1,53 +1,44 @@
-// src/app/[locale]/(products)/products/[slug]/page.tsx - 国際化対応版
+// src/app/[locale]/(products)/products/[slug]/page.tsx
 "use client";
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { ShoppingCart, ArrowLeft, Minus, Plus, Check } from "lucide-react";
-
 import { useCart } from "@/store/cart";
-import {
-  getProducts,
-  formatPrice,
-  getProductDetails,
-  getProductById,
-} from "@/data/utils";
+import { getProducts, formatPrice, getProductDetails, getProductById } from "@/data/utils";
 import { useTranslations } from "next-intl";
+import { useInView } from "@/hooks/useInView";
 
 const ProductDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const { addToCart } = useCart();
-
   const locale = params.locale as string;
-
-  // 翻訳フック
   const t = useTranslations("productDetail");
 
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const { ref: imgRef, inView: imgInView } = useInView(0.1);
+  const { ref: infoRef, inView: infoInView } = useInView(0.1);
 
-  // slugからproductを取得（ロケール対応）
   const productId = parseInt(params.slug as string);
   const product = getProductById(productId, locale);
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+      <div style={{ minHeight: "100vh", background: "var(--fuji-black)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", color: "var(--fuji-white)", marginBottom: "2rem" }}>
             {t("productNotFound")}
-          </h1>
-          <Button
+          </p>
+          <button
             onClick={() => router.push(`/${locale}/products`)}
-            variant="outline"
+            className="fuji-btn-outline"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
             {t("backToProducts")}
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -56,7 +47,6 @@ const ProductDetailPage = () => {
   const handleAddToCart = async () => {
     setIsAdding(true);
     addToCart(product, quantity);
-
     setTimeout(() => {
       setIsAdding(false);
       setJustAdded(true);
@@ -65,225 +55,430 @@ const ProductDetailPage = () => {
   };
 
   const handleQuantityChange = (increment: boolean) => {
-    if (increment) {
-      setQuantity((prev) => prev + 1);
-    } else {
-      setQuantity((prev) => Math.max(prev - 1, 1));
-    }
+    if (increment) setQuantity((p) => p + 1);
+    else setQuantity((p) => Math.max(p - 1, 1));
   };
 
   const productDetails = getProductDetails(product, locale);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      {/* ナビゲーション */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <button
-              onClick={() => router.push(`/${locale}/products`)}
-              className="flex items-center hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              {t("productList")}
-            </button>
-            <span>/</span>
-            <span className="text-gray-900">{product.name}</span>
-          </div>
+    <div style={{ minHeight: "100vh", background: "var(--fuji-black)", paddingTop: "72px" }}>
+
+      {/* Breadcrumb */}
+      <div style={{ borderBottom: "1px solid var(--fuji-gold-border)", padding: "1rem 0" }}>
+        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem" }}>
+          <button
+            onClick={() => router.push(`/${locale}/products`)}
+            style={{
+              fontFamily: "Inter",
+              fontSize: "0.65rem",
+              fontWeight: 300,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--fuji-gray)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "color 0.3s",
+            }}
+            className="fuji-back-btn"
+          >
+            <ArrowLeft size={14} />
+            {t("productList")}
+          </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* 画像セクション */}
-          <div className="space-y-4">
-            {/* メイン画像 */}
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+      {/* Main Content */}
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "4rem 2rem" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "5rem",
+          alignItems: "start",
+        }}
+        className="product-detail-grid"
+        >
+          {/* Left: Image */}
+          <div ref={imgRef} style={{ position: "sticky", top: "100px" }}>
+            <div style={{
+              position: "relative",
+              aspectRatio: "1",
+              background: "var(--fuji-surface)",
+              overflow: "hidden",
+              border: "1px solid var(--fuji-gold-border)",
+            }}>
+              <div className={`reveal-clip${imgInView ? " is-visible" : ""}`} style={{ position: "absolute", inset: 0 }}>
               <Image
                 src={product.image.url}
                 alt={product.image.alt}
                 fill
-                className="object-cover"
+                style={{ objectFit: "cover" }}
                 priority
               />
-
-              {/* セール表示 */}
+              </div>
               {product.originalPrice && (
-                <div className="absolute top-4 left-4">
-                  <span className="bg-orange-500 text-white text-sm px-3 py-1 rounded-full font-medium">
-                    {t("onSale")}
-                  </span>
+                <div style={{
+                  position: "absolute",
+                  top: "1.5rem",
+                  left: "1.5rem",
+                  background: "var(--fuji-gold)",
+                  color: "var(--fuji-black)",
+                  fontFamily: "Inter",
+                  fontSize: "0.6rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  padding: "4px 12px",
+                }}>
+                  {t("onSale")}
                 </div>
               )}
             </div>
           </div>
 
-          {/* 商品情報セクション */}
-          <div className="space-y-6">
-            {/* 基本情報 */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                  {product.category}
-                </span>
-                <span className="text-sm text-gray-500 bg-blue-100 px-3 py-1 rounded-full">
-                  {product.label}
-                </span>
-              </div>
+          {/* Right: Info */}
+          <div
+            ref={infoRef}
+            className={`reveal reveal-delay-2${infoInView ? " is-visible" : ""}`}
+            style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
+          >
 
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+            {/* Category / Label */}
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <span style={{
+                fontFamily: "Inter",
+                fontSize: "0.6rem",
+                fontWeight: 300,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "var(--fuji-gray)",
+                border: "1px solid var(--fuji-gold-border)",
+                padding: "3px 10px",
+              }}>
+                {product.category}
+              </span>
+              <span style={{
+                fontFamily: "Inter",
+                fontSize: "0.6rem",
+                fontWeight: 300,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "var(--fuji-gold-dim)",
+                border: "1px solid var(--fuji-gold-border)",
+                padding: "3px 10px",
+              }}>
+                {product.label}
+              </span>
+            </div>
+
+            {/* Product Name */}
+            <div>
+              <h1 style={{
+                fontFamily: "var(--font-cormorant)",
+                fontWeight: 200,
+                fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
+                letterSpacing: "0.12em",
+                color: "var(--fuji-white)",
+                lineHeight: 1.2,
+                marginBottom: "1rem",
+              }}>
                 {product.name}
               </h1>
-
-              <p className="text-gray-600 text-lg">{product.description}</p>
+              <div style={{ width: "40px", height: "1px", background: "var(--fuji-gold)" }} />
             </div>
 
-            {/* 価格 */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold text-gray-900">
-                  {formatPrice(product.price)}
-                </span>
-                {product.originalPrice && (
-                  <span className="text-xl text-gray-400 line-through">
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                )}
-              </div>
-            </div>
+            {/* Description */}
+            <p style={{
+              fontFamily: "Inter",
+              fontWeight: 300,
+              fontSize: "0.82rem",
+              letterSpacing: "0.06em",
+              color: "var(--fuji-gray-lt)",
+              lineHeight: 1.9,
+            }}>
+              {product.description}
+            </p>
 
-            {/* 数量選択 */}
-            <div className="space-y-4">
-              <span className="text-sm font-medium text-gray-900">
-                {t("quantity")}
+            {/* Price */}
+            <div style={{ display: "flex", alignItems: "baseline", gap: "1rem" }}>
+              <span style={{
+                fontFamily: "var(--font-cormorant)",
+                fontStyle: "italic",
+                fontWeight: 300,
+                fontSize: "2rem",
+                color: "var(--fuji-gold)",
+                letterSpacing: "0.08em",
+              }}>
+                {formatPrice(product.price)}
               </span>
+              {product.originalPrice && (
+                <span style={{
+                  fontFamily: "var(--font-cormorant)",
+                  fontSize: "1.2rem",
+                  color: "var(--fuji-gray)",
+                  textDecoration: "line-through",
+                  opacity: 0.6,
+                }}>
+                  {formatPrice(product.originalPrice)}
+                </span>
+              )}
+            </div>
 
-              <div className="flex items-center gap-3">
-                <div className="flex items-center border border-gray-300 rounded-lg">
-                  <Button
-                    variant="ghost"
-                    size="sm"
+            {/* Quantity */}
+            <div>
+              <p style={{
+                fontFamily: "Inter",
+                fontSize: "0.62rem",
+                fontWeight: 400,
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                color: "var(--fuji-gold)",
+                marginBottom: "0.75rem",
+              }}>
+                {t("quantity")}
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  border: "1px solid var(--fuji-gold-border)",
+                }}>
+                  <button
                     onClick={() => handleQuantityChange(false)}
                     disabled={quantity <= 1}
-                    className="w-10 h-10 p-0"
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      background: "none",
+                      border: "none",
+                      cursor: quantity <= 1 ? "not-allowed" : "pointer",
+                      color: quantity <= 1 ? "var(--fuji-surface2)" : "var(--fuji-gray)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "color 0.3s",
+                    }}
                   >
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                  <span className="w-12 text-center font-medium">
+                    <Minus size={14} />
+                  </button>
+                  <span style={{
+                    width: "48px",
+                    textAlign: "center",
+                    fontFamily: "var(--font-cormorant)",
+                    fontSize: "1.2rem",
+                    fontWeight: 300,
+                    color: "var(--fuji-white)",
+                  }}>
                     {quantity}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => handleQuantityChange(true)}
-                    className="w-10 h-10 p-0"
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--fuji-gray)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "color 0.3s",
+                    }}
                   >
-                    <Plus className="w-4 h-4" />
-                  </Button>
+                    <Plus size={14} />
+                  </button>
                 </div>
-
-                <div className="text-sm text-gray-600">
+                <span style={{
+                  fontFamily: "var(--font-cormorant)",
+                  fontStyle: "italic",
+                  fontSize: "1rem",
+                  color: "var(--fuji-gray)",
+                }}>
                   {t("subtotal")}: {formatPrice(product.price * quantity)}
-                </div>
+                </span>
               </div>
             </div>
 
-            {/* カートに追加ボタン */}
-            <Button
+            {/* Age Confirmation */}
+            <label style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              cursor: "pointer",
+            }}>
+              <input
+                type="checkbox"
+                checked={ageConfirmed}
+                onChange={(e) => setAgeConfirmed(e.target.checked)}
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  accentColor: "var(--fuji-gold)",
+                  cursor: "pointer",
+                }}
+              />
+              <span style={{
+                fontFamily: "Inter",
+                fontSize: "0.7rem",
+                fontWeight: 300,
+                letterSpacing: "0.06em",
+                color: "var(--fuji-gray)",
+              }}>
+                I confirm I am of legal drinking age.
+              </span>
+            </label>
+
+            {/* Add to Cart Button */}
+            <button
               onClick={handleAddToCart}
-              disabled={isAdding}
-              className={`w-full h-12 text-base font-medium transition-all duration-300 ${
-                justAdded
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-gray-900 hover:bg-gray-800"
-              }`}
+              disabled={isAdding || !ageConfirmed}
+              style={{
+                fontFamily: "Inter",
+                fontSize: "0.7rem",
+                fontWeight: 400,
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
+                padding: "1rem 0",
+                border: "1px solid",
+                cursor: isAdding || !ageConfirmed ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                transition: "all 0.3s",
+                background: justAdded
+                  ? "rgba(100,160,100,0.15)"
+                  : ageConfirmed
+                    ? "var(--fuji-gold)"
+                    : "transparent",
+                color: justAdded
+                  ? "#6aaf6a"
+                  : ageConfirmed
+                    ? "var(--fuji-black)"
+                    : "var(--fuji-surface2)",
+                borderColor: justAdded
+                  ? "#6aaf6a"
+                  : ageConfirmed
+                    ? "var(--fuji-gold)"
+                    : "var(--fuji-surface2)",
+                opacity: isAdding ? 0.7 : 1,
+              }}
             >
               {isAdding ? (
-                <div className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  {t("adding")}
-                </div>
+                <>
+                  <div style={{ width: "14px", height: "14px", border: "1px solid currentColor", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                  Adding...
+                </>
               ) : justAdded ? (
-                <div className="flex items-center">
-                  <Check className="w-5 h-5 mr-2" />
-                  {t("addedToCart")}
-                </div>
+                <>
+                  <Check size={14} />
+                  Added to Cart
+                </>
               ) : (
-                <div className="flex items-center">
-                  <ShoppingCart className="w-5 h-5 mr-2" />
+                <>
+                  <ShoppingCart size={14} />
                   {t("addToCart")}
-                </div>
+                </>
               )}
-            </Button>
+            </button>
 
-            {/* 商品詳細情報 */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  {t("productDetails")}
-                </h3>
-                <div className="space-y-3">
-                  {productDetails.map((detail, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0"
-                    >
-                      <span className="text-sm text-gray-600">
-                        {detail.label}
-                      </span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {detail.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Product Details Table */}
+            <div style={{ borderTop: "1px solid var(--fuji-gold-border)", paddingTop: "2rem" }}>
+              <p style={{
+                fontFamily: "Inter",
+                fontSize: "0.62rem",
+                fontWeight: 400,
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                color: "var(--fuji-gold)",
+                marginBottom: "1.5rem",
+              }}>
+                {t("productDetails")}
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                {productDetails.map((detail, i) => (
+                  <div key={i} style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "0.75rem 0",
+                    borderBottom: "1px solid rgba(201,169,110,0.06)",
+                  }}>
+                    <span style={{ fontFamily: "Inter", fontSize: "0.72rem", fontWeight: 300, color: "var(--fuji-gray)", letterSpacing: "0.06em" }}>
+                      {detail.label}
+                    </span>
+                    <span style={{ fontFamily: "var(--font-cormorant)", fontSize: "0.95rem", fontWeight: 300, color: "var(--fuji-white)", letterSpacing: "0.06em" }}>
+                      {detail.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 関連商品セクション */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">
+        {/* Related Products */}
+        <div style={{ marginTop: "7rem", borderTop: "1px solid var(--fuji-gold-border)", paddingTop: "5rem" }}>
+          <h2 style={{
+            fontFamily: "var(--font-cormorant)",
+            fontWeight: 200,
+            fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
+            letterSpacing: "0.25em",
+            color: "var(--fuji-white)",
+            marginBottom: "3rem",
+            textAlign: "center",
+          }}>
             {t("relatedProducts")}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            gap: "1.5rem",
+          }}>
             {getProducts(locale)
-              .filter(
-                (p) => p.id !== product.id && p.category === product.category
-              )
+              .filter((p) => p.id !== product.id && p.category === product.category)
               .slice(0, 4)
-              .map((relatedProduct) => (
-                <Card
-                  key={relatedProduct.id}
-                  className="border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-                  onClick={() =>
-                    router.push(`/${locale}/products/${relatedProduct.id}`)
-                  }
+              .map((rp) => (
+                <div
+                  key={rp.id}
+                  onClick={() => router.push(`/${locale}/products/${rp.id}`)}
+                  className="fuji-card"
+                  style={{ cursor: "pointer", overflow: "hidden" }}
                 >
-                  <CardContent className="p-0">
-                    <div className="relative aspect-square bg-gray-50 overflow-hidden">
-                      <Image
-                        src={relatedProduct.image.url}
-                        alt={relatedProduct.image.alt}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <h3 className="font-medium text-gray-900 text-sm line-clamp-2">
-                        {relatedProduct.name}
-                      </h3>
-                      <p className="text-lg font-bold text-gray-900">
-                        {formatPrice(relatedProduct.price)}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div style={{ position: "relative", aspectRatio: "1", background: "var(--fuji-dark)", overflow: "hidden" }}>
+                    <Image src={rp.image.url} alt={rp.image.alt} fill style={{ objectFit: "cover" }} />
+                  </div>
+                  <div style={{ padding: "1.25rem" }}>
+                    <h3 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 300, fontSize: "0.95rem", color: "var(--fuji-white)", letterSpacing: "0.06em", marginBottom: "0.5rem" }}>
+                      {rp.name}
+                    </h3>
+                    <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "0.9rem", color: "var(--fuji-gold)" }}>
+                      {formatPrice(rp.price)}
+                    </p>
+                  </div>
+                </div>
               ))}
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        .fuji-back-btn:hover { color: var(--fuji-gold) !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+          .product-detail-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2.5rem !important;
+          }
+          .product-detail-grid > div:first-child {
+            position: static !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

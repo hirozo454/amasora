@@ -1,8 +1,8 @@
-// src/app/(top-page)/Product.tsx
 "use client";
 import React from "react";
 import { LegacyProductData } from "@/types/products";
 import { ProductCard } from "./ProductCard";
+import { Link } from "@/i18n/routing";
 
 interface ProductProps {
   productsData: LegacyProductData[];
@@ -10,16 +10,55 @@ interface ProductProps {
 
 export const Product: React.FC<ProductProps> = ({ productsData }) => {
   return (
-    <section className="py-8 sm:py-12 lg:py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-lg sm:text-xl lg:text-2xl font-light text-gray-900 mb-6 sm:mb-8 lg:mb-12 border-b border-gray-300 pb-3 sm:pb-4">
-          PRODUCT
-        </h2>
+    <section style={{ background: "var(--fuji-black)", padding: "7rem 0" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem" }}>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
+        {/* Section Header */}
+        <div style={{ textAlign: "center", marginBottom: "5rem" }}>
+          <p style={{
+            fontFamily: "Inter",
+            fontSize: "0.62rem",
+            fontWeight: 400,
+            letterSpacing: "0.45em",
+            color: "var(--fuji-gold)",
+            textTransform: "uppercase",
+            marginBottom: "1rem",
+          }}>
+            Premium Collection
+          </p>
+          <h2 style={{
+            fontFamily: "var(--font-cormorant)",
+            fontWeight: 200,
+            fontSize: "clamp(2rem, 5vw, 3.2rem)",
+            letterSpacing: "0.25em",
+            color: "var(--fuji-white)",
+            marginBottom: "1.5rem",
+          }}>
+            COLLECTION
+          </h2>
+          <div className="fuji-rule" />
+        </div>
+
+        {/* Products Grid */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+          gap: "1.5rem",
+        }}>
           {productsData.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
+        </div>
+
+        {/* View All CTA */}
+        <div style={{ textAlign: "center", marginTop: "4rem" }}>
+          <Link
+            href="/products"
+            className="fuji-btn-outline"
+            style={{ display: "inline-block", textDecoration: "none" }}
+          >
+            View All Products
+          </Link>
         </div>
       </div>
     </section>

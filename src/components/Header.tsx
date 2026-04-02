@@ -1,218 +1,313 @@
 "use client";
 
 import { Link } from "@/i18n/routing";
-import {
-  ShoppingCart,
-  Menu,
-  X,
-  Package,
-  Info,
-  HeadphonesIcon,
-} from "lucide-react";
-import { Button } from "./ui/button";
-import { useState } from "react";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "./ui/sheet";
+import { ShoppingCart, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useCart } from "@/store/cart";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useTranslations } from "next-intl";
 import { LanguageSelector } from "./LanguageSelector";
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { getTotalQuantity } = useCart();
   const t = useTranslations("navigation");
-  const tHeader = useTranslations("header");
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const menuItems = [
-    { href: "/", label: t("home"), icon: HeadphonesIcon },
-    { href: "/q&a", label: t("qa"), icon: Info },
-    { href: "/products", label: t("product"), icon: Package },
+    { href: "/", label: t("home") },
+    { href: "/products", label: t("product") },
+    { href: "/q&a", label: t("qa") },
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200/50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 relative">
-          {/* PC Navigation - 左側 */}
-          <nav className="hidden lg:flex space-x-8">
+    <>
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          transition: "background 0.5s, border-color 0.5s, backdrop-filter 0.5s",
+          background: scrolled ? "rgba(5,5,5,0.92)" : "transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          borderBottom: scrolled
+            ? "1px solid rgba(201,169,110,0.12)"
+            : "1px solid transparent",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
+            padding: "0 2rem",
+            height: "72px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "relative",
+          }}
+        >
+          {/* PC Nav — Left */}
+          <nav
+            style={{ display: "flex", gap: "2.5rem" }}
+            className="hidden lg:flex"
+          >
             {menuItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-gray-900 hover:text-gray-600 font-medium text-sm transition-colors duration-200 relative group"
+                style={{
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "0.68rem",
+                  fontWeight: 400,
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  color: "var(--fuji-gray-lt)",
+                  textDecoration: "none",
+                  position: "relative",
+                  paddingBottom: "2px",
+                  transition: "color 0.3s",
+                }}
+                className="header-nav-link"
               >
                 {item.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-200 group-hover:w-full" />
               </Link>
             ))}
           </nav>
 
-          {/* モバイルメニューボタン */}
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild className="lg:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 hover:bg-gray-100/80 transition-all duration-200 rounded-xl"
-              >
-                <Menu className="w-5 h-5 text-gray-700" />
-              </Button>
-            </SheetTrigger>
-
-            <SheetContent
-              side="left"
-              className="w-80 p-0 border-0 bg-gradient-to-br from-slate-50 via-white to-gray-50"
-            >
-              <VisuallyHidden>
-                <SheetTitle>{tHeader("navigationMenu")}</SheetTitle>
-              </VisuallyHidden>
-
-              {/* Header Section */}
-              <div className="relative p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-black text-white">
-                <div
-                  className="absolute inset-0 opacity-30"
-                  style={{
-                    backgroundImage:
-                      "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3Ccircle cx='17' cy='17' r='1'/%3E%3Ccircle cx='27' cy='27' r='1'/%3E%3Ccircle cx='37' cy='37' r='1'/%3E%3Ccircle cx='47' cy='47' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-                  }}
-                ></div>
-
-                <div className="relative flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-light tracking-wider">
-                      天地星空
-                    </h2>
-                    <p className="text-sm text-white/70 mt-1">
-                      Amachi-Hoshisora
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-white/10 text-white rounded-full transition-all duration-200"
-                    aria-label={tHeader("closeMenu")}
-                  >
-                    <X className="w-5 h-5" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Navigation Section */}
-              <div className="p-6">
-                <nav className="space-y-2">
-                  {menuItems.map((item, index) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className="group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                        <item.icon className="w-5 h-5 text-gray-600" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-gray-900 font-medium text-lg group-hover:text-gray-700 transition-colors">
-                          {item.label}
-                        </span>
-                      </div>
-                      <div className="w-2 h-2 rounded-full bg-gray-300 group-hover:bg-gray-400 transition-colors duration-200"></div>
-                    </Link>
-                  ))}
-                </nav>
-
-                {/* Divider */}
-                <div className="my-8 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-
-                {/* Language Selector - Mobile */}
-                <LanguageSelector
-                  variant="mobile"
-                  onLanguageChange={() => setIsOpen(false)}
-                />
-
-                {/* Quick Actions */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
-                    {t("quickActions")}
-                  </h3>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Link
-                      href="/cart"
-                      onClick={() => setIsOpen(false)}
-                      className="h-12 rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 flex items-center justify-center gap-2 relative"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      <span className="text-sm">{t("cart")}</span>
-                      {getTotalQuantity() > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {getTotalQuantity()}
-                        </span>
-                      )}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer Section */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-gray-50 to-transparent">
-                <div className="text-center">
-                  <p className="text-xs text-gray-400">
-                    © 2024 Amachi-Hoshisora
-                  </p>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsOpen(true)}
+            className="lg:hidden"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--fuji-white)",
+              padding: "8px",
+            }}
+          >
+            <Menu size={20} />
+          </button>
 
           {/* Center Logo */}
           <Link
             href="/"
-            className="text-lg sm:text-xl lg:text-2xl font-light tracking-wider text-gray-900 hover:text-gray-600 absolute left-1/2 transform -translate-x-1/2"
+            style={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              textDecoration: "none",
+              textAlign: "center",
+              lineHeight: 1,
+            }}
           >
-            <span className="hidden sm:inline">Amachi-Hoshisora</span>
-            <span className="sm:hidden">Amachi-Hoshisora</span>
+            <div
+              style={{
+                fontFamily: "var(--font-cormorant)",
+                fontSize: "clamp(1.1rem, 2vw, 1.4rem)",
+                fontWeight: 200,
+                letterSpacing: "0.3em",
+                color: "var(--fuji-white)",
+              }}
+            >
+              天地星空
+            </div>
+            <div
+              style={{
+                fontFamily: "Inter, sans-serif",
+                fontSize: "0.55rem",
+                fontWeight: 300,
+                letterSpacing: "0.35em",
+                color: "var(--fuji-gold)",
+                textTransform: "uppercase",
+                marginTop: "3px",
+              }}
+            >
+              Amachi Hoshisora
+            </div>
           </Link>
 
-          {/* Right Icons */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Language Selector - Desktop */}
-            <LanguageSelector variant="desktop" />
-
+          {/* Right — Language + Cart */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <span className="hidden lg:block">
+              <LanguageSelector variant="desktop" />
+            </span>
             <Link
               href="/cart"
-              className="relative p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
-              aria-label="Cart"
+              style={{
+                position: "relative",
+                color: "var(--fuji-gray-lt)",
+                padding: "6px",
+                display: "flex",
+                alignItems: "center",
+              }}
             >
-              <ShoppingCart className="w-5 h-5 text-gray-600" />
+              <ShoppingCart size={18} />
               {getTotalQuantity() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-2px",
+                    right: "-4px",
+                    background: "var(--fuji-gold)",
+                    color: "#000",
+                    fontSize: "0.6rem",
+                    fontWeight: 600,
+                    width: "16px",
+                    height: "16px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   {getTotalQuantity()}
                 </span>
               )}
             </Link>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes slideInLeft {
-          0% {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateX(0);
-          }
+      {/* Mobile Drawer */}
+      {isOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            display: "flex",
+          }}
+        >
+          {/* Overlay */}
+          <div
+            onClick={() => setIsOpen(false)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.75)",
+            }}
+          />
+
+          {/* Drawer */}
+          <div
+            style={{
+              position: "relative",
+              width: "300px",
+              background: "var(--fuji-dark)",
+              borderRight: "1px solid var(--fuji-gold-border)",
+              display: "flex",
+              flexDirection: "column",
+              padding: "2rem",
+            }}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setIsOpen(false)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--fuji-gray)",
+                alignSelf: "flex-end",
+                marginBottom: "2rem",
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            {/* Brand */}
+            <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
+              <div
+                style={{
+                  fontFamily: "var(--font-cormorant)",
+                  fontSize: "1.8rem",
+                  fontWeight: 200,
+                  letterSpacing: "0.25em",
+                  color: "var(--fuji-white)",
+                }}
+              >
+                天地星空
+              </div>
+              <div
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: "0.6rem",
+                  letterSpacing: "0.3em",
+                  color: "var(--fuji-gold)",
+                  marginTop: "4px",
+                }}
+              >
+                AMACHI HOSHISORA
+              </div>
+            </div>
+
+            {/* Gold rule */}
+            <div
+              style={{
+                height: "1px",
+                background: "var(--fuji-gold-border)",
+                marginBottom: "2rem",
+              }}
+            />
+
+            {/* Nav */}
+            <nav style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              {menuItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  style={{
+                    fontFamily: "Inter, sans-serif",
+                    fontSize: "0.7rem",
+                    fontWeight: 400,
+                    letterSpacing: "0.25em",
+                    textTransform: "uppercase",
+                    color: "var(--fuji-gray-lt)",
+                    textDecoration: "none",
+                    transition: "color 0.3s",
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Language selector mobile */}
+            <div style={{ marginTop: "2.5rem" }}>
+              <LanguageSelector variant="mobile" onLanguageChange={() => setIsOpen(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        .header-nav-link:hover {
+          color: var(--fuji-gold) !important;
         }
-
-        .animate-slide-in {
-          animation: slideInLeft 0.3s ease-out forwards;
+        .header-nav-link::after {
+          content: '';
+          position: absolute;
+          bottom: -2px;
+          left: 0;
+          width: 0;
+          height: 1px;
+          background: var(--fuji-gold);
+          transition: width 0.3s ease;
+        }
+        .header-nav-link:hover::after {
+          width: 100%;
         }
       `}</style>
-    </header>
+    </>
   );
 };
